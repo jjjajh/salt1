@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { BarChart, Users, MessageSquare, Settings, Plus } from 'lucide-react';
+import { BarChart, Users, MessageSquare, Settings, Plus, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import AdminSignup from './AdminSignup';
 
 const AdminDashboard: React.FC = () => {
   const { user, isAdmin, loading } = useAuth();
+  const [showAdminSignup, setShowAdminSignup] = useState(false);
   const [stats, setStats] = useState({
     totalPosts: 0,
     postsByCategory: {} as { [key: string]: number },
+    totalAdmins: 0,
   });
 
   const categories = [
@@ -31,31 +34,44 @@ const AdminDashboard: React.FC = () => {
       setStats({
         totalPosts: 0,
         postsByCategory: {},
+        totalAdmins: 0,
       });
       return;
     }
     
-    const { data, error } = await supabase
+    // Fetch posts data
+    const { data: postsData, error: postsError } = await supabase
       .from('posts')
       .select('category');
 
-    if (!error && data) {
+    // Fetch admin users count
+    const { data: adminData, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id', { count: 'exact' });
+
+    if (!postsError && postsData) {
       const postsByCategory: { [key: string]: number } = {};
       categories.forEach(cat => {
         postsByCategory[cat.name] = 0;
       });
 
-      data.forEach(post => {
+      postsData.forEach(post => {
         if (postsByCategory.hasOwnProperty(post.category)) {
           postsByCategory[post.category]++;
         }
       });
 
       setStats({
-        totalPosts: data.length,
+        totalPosts: postsData.length,
         postsByCategory,
+        totalAdmins: adminData?.length || 0,
       });
     }
+  };
+
+  const handleAdminSignupSuccess = () => {
+    setShowAdminSignup(false);
+    fetchStats(); // Refresh stats to update admin count
   };
 
   if (loading) {
@@ -79,6 +95,18 @@ const AdminDashboard: React.FC = () => {
           <span>관리자: {user.email}</span>
         </div>
       </div>
+
+      {/* Admin Signup Modal */}
+      {showAdminSignup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="max-w-md w-full mx-4">
+            <AdminSignup
+              onSuccess={handleAdminSignupSuccess}
+              onCancel={() => setShowAdminSignup(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -113,7 +141,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">관리자</p>
-              <p className="text-2xl font-bold text-gray-900">1</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalAdmins}</p>
             </div>
           </div>
         </div>
@@ -161,6 +189,26 @@ const AdminDashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">빠른 작업</h2>
+        
+        {/* Admin Management Section */}
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">관리자 관리</h3>
+          <button
+            onClick={() => setShowAdminSignup(true)}
+            className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="p-2 bg-green-100 rounded-lg">
+              <UserPlus className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">새 관리자 추가</p>
+              <p className="text-sm text-gray-600">새로운 관리자 계정 생성</p>
+            </div>
+          </button>
+        </div>
+
+        {/* Post Management Section */}
+        <h3 className="text-lg font-medium text-gray-900 mb-4">게시물 관리</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
             <a
