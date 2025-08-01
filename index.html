@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>동서울소망교회</title>
+    <meta name="description" content="하나님의 사랑과 은혜가 넘치는 동서울소망교회입니다." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- 카카오맵 스크립트 -->
+    <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js"></script>
+    <script charset="UTF-8">
+      // 페이지 로드 후 지도 렌더링
+      window.addEventListener('load', function() {
+        if (typeof daum !== 'undefined' && daum.roughmap) {
+          new daum.roughmap.Lander({
+            "timestamp" : "1754040873656",
+            "key" : "6mxqt4carb5",
+            "mapWidth" : "640",
+            "mapHeight" : "360"
+          }).render();
+        }
+      });
+    </script>
+  </body>
+</html>
