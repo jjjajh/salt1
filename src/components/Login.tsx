@@ -28,7 +28,11 @@ const Login: React.FC = () => {
     const { error } = await signIn(formData.email, formData.password);
 
     if (error) {
-      alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+      if (error.message === 'Invalid login credentials') {
+        alert('이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해주세요.');
+      } else {
+        alert(`로그인 중 오류가 발생했습니다: ${error.message}`);
+      }
     } else {
       navigate('/admin');
     }
